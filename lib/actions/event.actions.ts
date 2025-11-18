@@ -1,0 +1,36 @@
+'use server';
+
+import { Event } from "../../database/event.model";
+import dbConnect from "../mongodb";
+
+export const getSimilarEventsBySlug = async (slug: string) => {
+  try {
+    await dbConnect();
+
+    const event = await Event.findOne({ slug }).lean();
+    
+    return await Event.find({ _id: { $ne: event._id},  tags: { $in: event.tags } }).lean();
+
+    
+  } catch {
+    return [];
+  }
+} 
+
+
+  /*export const getSimilarEventsBySlug = async (slug: string): Promise<unknown[]> => {
+  try {
+    await dbConnect();
+
+    const event = await Event.findOne({ slug }).lean();
+    if (!event) return [];
+
+    return await Event.find({
+      _id: { $ne: event._id },
+      tags: { $in: event.tags }
+    }).lean();
+  } catch (err) {
+    console.error('getSimilarEventsBySlug error:', err);
+    return [];
+  }
+} */

@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import LightRays from "@/components/LightRays";
 import Navbar from "@/components/Navbar";
-//import Home from "./components/home";
+
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,7 +37,7 @@ export default function RootLayout({
             raysColor="#00ffff"
             raysSpeed={1}
             lightSpread={0.9}
-            rayLength={1.4}
+            rayLength={1.9}
             followMouse={true}
             mouseInfluence={0.1}
             noiseAmount={0.1}
@@ -49,3 +49,7 @@ export default function RootLayout({
     </html>
   );
 }
+
+
+
+
