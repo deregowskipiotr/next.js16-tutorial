@@ -2,6 +2,7 @@ import BookEvent from "@/components/BookEvent";
 import EventCard from "@/components/EventCard";
 import { IEvent } from "@/database";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
+import { cacheLife } from "next/cache";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
@@ -35,8 +36,12 @@ const EventTags = ({ tags }: { tags: string[] }) => (
 );
 
 const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) => {
+  'use cache';
+  cacheLife('hours');
   const { slug } = await params;
   console.log("current slug:", slug);
+
+  //let event;
 
   const request = await fetch(`${BASE_URL}/api/events/${slug}`);
   const response = await request.json(); // First get the full response
@@ -47,7 +52,8 @@ const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) =>
     console.log("API request failed or no data:", response);
     return notFound();
   }
-
+  
+  const event: IEvent = response.data;
   // Now destructure from response.data
   const {
     description,
@@ -61,7 +67,7 @@ const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) =>
     audience,
     tags,
     organizer,
-  } = response.data;
+  } = event;
 
   console.log("description:", description);
   console.log("Agenda data:", agenda);
@@ -71,6 +77,7 @@ const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) =>
   const bookings = 10; // Placeholder for bookings data
 
   const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
+
 
   return (
     <section id="event">
@@ -121,8 +128,7 @@ const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) =>
             <p>{organizer}</p>
           </section>
 
-          <EventTags tags={tags}/>
-          
+          <EventTags tags={tags} />
         </div>
 
         {/* Right Side - Booking Form*/}
@@ -130,23 +136,25 @@ const EventDetailsPage = async ({params} : {params: Promise<{slug: string}>}) =>
           <div className="signup-card">
             <h2>Book Your Spot</h2>
             {bookings > 0 ? (
-              <p className="text-sm">Join {bookings} people who have already booked their spot!</p>
+              <p className="text-sm">
+                Join {bookings} people who have already booked their spot!
+              </p>
             ) : (
               <p className="text-sm">Be the first to book your spot!</p>
             )}
 
-            <BookEvent />
+            <BookEvent eventId={String(event._id)} slug={event.slug} />
           </div>
         </aside>
       </div>
-      
 
       <div className="flex w-full flex-col gap-4 pt-20">
         <h2>Similar Events</h2>
         <div className="events">
-          {similarEvents.length > 0 && similarEvents.map((similarEvent: IEvent) => (
-            <EventCard key={similarEvent.title} { ...similarEvent}  />
-          ))}
+          {similarEvents.length > 0 &&
+            similarEvents.map((similarEvent: IEvent) => (
+              <EventCard key={similarEvent.title} {...similarEvent} />
+            ))}
         </div>
       </div>
     </section>

@@ -1,24 +1,29 @@
-'use server';
+"use server";
 
-import { Event } from "../../database/event.model";
+import { Event } from "@/database/event.model";
 import dbConnect from "../mongodb";
+
 
 export const getSimilarEventsBySlug = async (slug: string) => {
   try {
     await dbConnect();
+    const event = await Event.findOne({ slug });
 
-    const event = await Event.findOne({ slug }).lean();
-    
-    return await Event.find({ _id: { $ne: event._id},  tags: { $in: event.tags } }).lean();
+    if (!event) {
+      return []; // no event with this slug, so no similar events
+    }
 
-    
-  } catch {
+    return await Event.find({
+      _id: { $ne: event._id },
+      tags: { $in: event.tags },
+    }).lean();
+  } catch (error) {
+    console.error("getSimilarEventsBySlug error:", error);
     return [];
   }
-} 
+};
 
-
-  /*export const getSimilarEventsBySlug = async (slug: string): Promise<unknown[]> => {
+/*export const getSimilarEventsBySlug = async (slug: string): Promise<unknown[]> => {
   try {
     await dbConnect();
 
