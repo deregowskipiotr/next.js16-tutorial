@@ -11,7 +11,7 @@ export interface IEvent extends Document {
   location: string;
   date: string;
   time: string;
-  mode: "online" | "offline" | "hybrid";
+  mode: string;
   audience: string;
   agenda: string[];
   organizer: string;
@@ -67,7 +67,10 @@ const EventSchema: Schema<IEvent> = new Schema(
     mode: {
       type: String,
       required: [true, "Event mode is required"],
-      enum: ["online", "offline", "hybrid"],
+      enum: {
+        values: ["online", "offline", "hybrid"],
+        message: "Mode must be either online, offline, or hybrid",
+      },
     },
     audience: {
       type: String,

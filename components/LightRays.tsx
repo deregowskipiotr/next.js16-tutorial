@@ -14,6 +14,24 @@ export type RaysOrigin =
   | "bottom-right"
   | "bottom-left";
 
+interface Uniforms {
+  iTime: { value: number };
+  iResolution: { value: [number, number] };
+  rayPos: { value: [number, number] };
+  rayDir: { value: [number, number] };
+  raysColor: { value: [number, number, number] };
+  raysSpeed: { value: number };
+  lightSpread: { value: number };
+  rayLength: { value: number };
+  pulsating: { value: number };
+  fadeDistance: { value: number };
+  saturation: { value: number };
+  mousePos: { value: [number, number] };
+  mouseInfluence: { value: number };
+  noiseAmount: { value: number };
+  distortion: { value: number };
+}
+
 interface LightRaysProps {
   raysOrigin?: RaysOrigin;
   raysColor?: string;
@@ -50,7 +68,6 @@ const getAnchorAndDir = (
 ): { anchor: [number, number]; dir: [number, number] } => {
   const outside = 0.2;
   switch (origin) {
-    
     case "top-left":
       return { anchor: [0, -outside * h], dir: [0, 1] };
     case "top-right":
@@ -88,12 +105,12 @@ const LightRays: React.FC<LightRaysProps> = ({
   className = "",
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
-  const uniformsRef = useRef<unknown>(null);
+  const uniformsRef = useRef<Uniforms | null>(null);
   const rendererRef = useRef<Renderer | null>(null);
   const mouseRef = useRef({ x: 0.5, y: 0.5 });
   const smoothMouseRef = useRef({ x: 0.5, y: 0.5 });
   const animationIdRef = useRef<number | null>(null);
-  const meshRef = useRef<unknown>(null);
+  const meshRef = useRef<Mesh | null>(null);
   const cleanupFunctionRef = useRef<(() => void) | null>(null);
   const [isVisible, setIsVisible] = useState(false);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -251,13 +268,11 @@ void main() {
   gl_FragColor  = color;
 }`;
 
-      const uniforms = {
+      const uniforms: Uniforms = {
         iTime: { value: 0 },
         iResolution: { value: [1, 1] },
-
         rayPos: { value: [0, 0] },
         rayDir: { value: [0, 1] },
-
         raysColor: { value: hexToRgb(raysColor) },
         raysSpeed: { value: raysSpeed },
         lightSpread: { value: lightSpread },
@@ -301,7 +316,11 @@ void main() {
       };
 
       const loop = (t: number) => {
-        if (!rendererRef.current || !uniformsRef.current || !meshRef.current) {
+        const renderer = rendererRef.current;
+        const uniforms = uniformsRef.current;
+        const mesh = meshRef.current;
+
+        if (!renderer || !uniforms || !mesh) {
           return;
         }
 
@@ -392,11 +411,8 @@ void main() {
   ]);
 
   useEffect(() => {
-    if (!uniformsRef.current || !containerRef.current || !rendererRef.current)
-      return;
-
     const u = uniformsRef.current;
-    const renderer = rendererRef.current;
+    if (!u || !containerRef.current || !rendererRef.current) return;
 
     u.raysColor.value = hexToRgb(raysColor);
     u.raysSpeed.value = raysSpeed;
@@ -410,6 +426,7 @@ void main() {
     u.distortion.value = distortion;
 
     const { clientWidth: wCSS, clientHeight: hCSS } = containerRef.current;
+    const renderer = rendererRef.current;
     const dpr = renderer.dpr;
     const { anchor, dir } = getAnchorAndDir(raysOrigin, wCSS * dpr, hCSS * dpr);
     u.rayPos.value = anchor;
